@@ -13,5 +13,6 @@
 │   ├── train.py
 │   └── inference.py
 │
+├── requirements.txt
 └── run.sh
 ``` 
