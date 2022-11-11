@@ -15,16 +15,6 @@
 │
 ├── requirements.txt
 └── run.sh
-<<<<<<< HEAD
-``` 
-
-# git usage
-
-- pr 날리는법
-=======
-<<<<<<< Updated upstream
-``` 
-=======
 ``` 
 
 # Git Usage
@@ -45,7 +35,6 @@ git fetch # 원격 저장소의 브랜치 및 정보들에 대한 업데이트
 
 
 ## How to Pull Request
->>>>>>> develop
 
 ```bash
 git checkout -b [issue name]
@@ -55,22 +44,15 @@ git push -u origin [issue name]
 ```
 
 
-<<<<<<< HEAD
-- pr 반영하는 법
-
-case 1
-=======
 ## PR Merge Case
 
 ### CLI
->>>>>>> develop
 ```bash
-git chekcout master
+git chekcout main
 git merge --no-f [issue-name]
-git push -u origin master
+git push -u origin
 ```
 
-<<<<<<< HEAD
 case 2
 github 홈페이지에서 pull request 작성 후, merge 요청
 
@@ -80,8 +62,3 @@ git add files
 git commit --amend 
 git push -f origin [issue-name]
 ```
-=======
-### GUI
-- github 홈페이지에서 pull request 작성 후, merge 요청
->>>>>>> Stashed changes
->>>>>>> develop
