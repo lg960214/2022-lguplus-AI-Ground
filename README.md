@@ -11,9 +11,6 @@
 │   ├── model.py
 │   └── dataset.py
 └── run.sh
-<<<<<<< Updated upstream
-``` 
-=======
 ``` 
 
 # Git Usage
@@ -47,11 +44,10 @@ git push -u origin [issue name]
 
 ### CLI
 ```bash
-git chekcout master
+git chekcout main
 git merge --no-f [issue-name]
-git push -u origin master
+git push -u origin
 ```
 
 ### GUI
 - github 홈페이지에서 pull request 작성 후, merge 요청
->>>>>>> Stashed changes
