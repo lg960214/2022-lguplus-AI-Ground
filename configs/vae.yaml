@@ -1,0 +1,28 @@
+---
+# vae
+
+DataModule:
+  seed: 42
+  batch_size: 32
+  workers: 4
+  heldout_users: 1200
+  raw_data_dir: "./dataset/raw"
+  processed_data_dir: "./dataset/processed"
+  train_data_path: "./dataset/processed/train.csv"
+  val_tr_path: "./dataset/processed/validation_tr.csv"
+  val_te_path: "./dataset/processed/validation_te.csv"
+  val_te_mat_path: "./dataset/processed/validation_te.npz"
+  test_data_path: "./dataset/processed/test.csv"
+
+Model:
+  p_dims: [1024, 4096, 39875]
+  q_dims: []
+  dropout_p: 0.5
+
+Trainer:
+  total_anneal_steps: 200000
+  anneal_cap: 0.2
+  weight_decay: 0.9
+  learning_rate: 3e-4
+  epochs: 100
+  fp_16: True
