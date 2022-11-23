@@ -27,7 +27,7 @@ def cli_main(conf):
     engine = Engine(model, conf.Trainer, conf.DataModule.val_te_mat_path)
 
     checkpoint_callback = ModelCheckpoint(
-        filename="epoch{epoch}-val_score{valid_score:.4f}",
+        filename="epoch{epoch}-val_score{valid_score:.4f}-recall{valid_recall@25:.4f}-ndcg{valid_ndcg@25:.4f}",
         monitor="valid_score",
         mode="max",
         auto_insert_metric_name=False,
