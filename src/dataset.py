@@ -176,6 +176,15 @@ class Uplus_DataModule(pl.LightningDataModule):
                 matrix=data,
             )
 
+    def to_csr_matrix(self, df):
+        n_users = df["profile_id"].max() + 1
+        rows, cols = df["profile_id"], df["album_id"]
+        data = df["ss_watch_cnt"]
+        matrix = sparse.csr_matrix(
+            (data, (rows, cols)), dtype="float64", shape=(n_users, self.n_items)
+        )
+        return matrix
+
     def setup(self, stage=None):
         self.prepare_data()
         self.pre_processing()
@@ -227,68 +236,61 @@ class Uplus_DataModule(pl.LightningDataModule):
         test_data = numerize(test_plays, profile2id, album2id)
         self.save_data(test_data, "test")
 
-        # test_data_te = numerize(test_te, profile2id, album2id)
-        # self.save_data(test_data_te, "test_te")
+        # convert to csr_matrix
+        train_mat = self.to_csr_matrix(train_data)
+        self.save_data(train_mat, "train")
 
-    def dataloader(self, tr_path, te_path=None, shuffle=True, stage="train"):
-        if stage == "train" or "test":
-            df = pd.read_csv(tr_path)
-
-            n_users = df["profile_id"].max() + 1
-            rows, cols = df["profile_id"], df["album_id"]
-            data = df["ss_watch_cnt"]
-
-            matrix = sparse.csr_matrix(
-                (data, (rows, cols)), dtype="float64", shape=(n_users, self.n_items)
-            )
-
-            dataset = torch.FloatTensor(matrix.toarray())
-
-            return DataLoader(
-                dataset,
-                batch_size=self.args.batch_size,
-                shuffle=shuffle,
-                num_workers=self.args.workers,
-                pin_memory=True,
-            )
-        else:
-            df_tr = pd.read_csv(tr_path)
-            df_te = pd.read_csv(te_path)
-
-            start_idx = min(df_tr["profile_id"].min(), df_te["profile_id"].min())
-            end_idx = max(df_tr["profile_id"].max(), df_te["profile_id"].max())
-
-            rows_tr, cols_tr = df_tr["profile_id"] - start_idx, df_tr["album_id"]
-            rows_te, cols_te = df_te["profile_id"] - start_idx, df_te["album_id"]
-
-            data_tr = sparse.csr_matrix(
-                (df_tr["ss_watch_cnt"], (rows_tr, cols_tr)),
-                dtype="float64",
-                shape=(end_idx - start_idx + 1, self.n_items),
-            )
-            data_te = sparse.csr_matrix(
-                (df_te["ss_watch_cnt"], (rows_te, cols_te)),
-                dtype="float64",
-                shape=(end_idx - start_idx + 1, self.n_items),
-            )
-
-            tr_dataset = torch.FloatTensor(data_tr.toarray())
-            self.save_data(data_te, "validation_te")
-
-            return DataLoader(
-                dataset=tr_dataset,
-                batch_size=self.args.batch_size,
-                shuffle=shuffle,
-                num_workers=self.args.workers,
-            )
-
-    def train_dataloader(self):
-        return self.dataloader(self.args.train_data_path, shuffle=True, stage="train")
-
-    def val_dataloader(self):
-        return self.dataloader(
-            self.args.val_tr_path, self.args.val_te_path, shuffle=False, stage="valid"
+        # valid is need a processing because matrix indexing
+        start_idx = min(
+            valid_data_tr["profile_id"].min(), valid_data_te["profile_id"].min()
+        )
+        end_idx = max(
+            valid_data_tr["profile_id"].max(), valid_data_te["profile_id"].max()
         )
 
+        rows_tr, cols_tr = (
+            valid_data_tr["profile_id"] - start_idx,
+            valid_data_tr["album_id"],
+        )
+        rows_te, cols_te = (
+            valid_data_te["profile_id"] - start_idx,
+            valid_data_te["album_id"],
+        )
+
+        data_tr = sparse.csr_matrix(
+            (valid_data_tr["ss_watch_cnt"], (rows_tr, cols_tr)),
+            dtype="float64",
+            shape=(end_idx - start_idx + 1, self.n_items),
+        )
+        data_te = sparse.csr_matrix(
+            (valid_data_te["ss_watch_cnt"], (rows_te, cols_te)),
+            dtype="float64",
+            shape=(end_idx - start_idx + 1, self.n_items),
+        )
+
+        self.save_data(data_tr, "validation_tr")
+        self.save_data(data_te, "validation_te")
+
+        test_mat = self.to_csr_matrix(test_data)
+        self.save_data(test_mat, "test")
+
+    def dataloader(self, path, shuffle=True):
+        mat = sparse.load_npz(path)
+        dataset = torch.FloatTensor(mat.toarray())
+
+        return DataLoader(
+            dataset,
+            batch_size=self.args.batch_size,
+            shuffle=shuffle,
+            num_workers=self.args.workers,
+            pin_memory=True,
+        )
+
+    def train_dataloader(self):
+        return self.dataloader(path=self.args.train_data_path, shuffle=True)
+
+    def val_dataloader(self):
+        return self.dataloader(path=self.args.val_tr_path, shuffle=False)
+
     def test_dataloader(self):
-        return self.dataloader(self.args.test_data_path, shuffle=False, stage="test")
+        return self.dataloader(path=self.args.test_data_path, shuffle=False)
